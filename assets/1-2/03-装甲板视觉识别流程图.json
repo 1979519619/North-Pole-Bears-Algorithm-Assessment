@@ -1,0 +1,261 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "装甲板视觉识别与验证流程",
+    "locale": "zh-CN",
+    "animation": "none",
+    "quality_profile": "showcase"
+  },
+  "lanes": [
+    {
+      "id": "processing",
+      "label": "图像处理"
+    },
+    {
+      "id": "output_lane",
+      "label": "检测输出"
+    },
+    {
+      "id": "comparison_lane",
+      "label": "人工对比"
+    },
+    {
+      "id": "decision_lane",
+      "label": "结果判断"
+    },
+    {
+      "id": "adjustment",
+      "label": "参数调整",
+      "variant": "exception"
+    },
+    {
+      "id": "completion_lane",
+      "label": "阶段结果"
+    }
+  ],
+  "phases": [
+    {
+      "id": "color_phase",
+      "label": "颜色分割",
+      "fromCol": 0,
+      "toCol": 2
+    },
+    {
+      "id": "contour_phase",
+      "label": "轮廓与候选筛选",
+      "fromCol": 3,
+      "toCol": 5,
+      "variant": "emphasis"
+    }
+  ],
+  "mainPath": [
+    "camera",
+    "hsv",
+    "inrange",
+    "contours",
+    "filter",
+    "target_box",
+    "output",
+    "compare",
+    "decision",
+    "complete"
+  ],
+  "semanticChecks": {
+    "allowedRoots": [
+      "camera"
+    ],
+    "allowedTerminals": [
+      "complete"
+    ],
+    "requiredPaths": [
+      {
+        "from": "camera",
+        "to": "complete"
+      },
+      {
+        "from": "decision",
+        "to": "inrange"
+      },
+      {
+        "from": "decision",
+        "to": "filter"
+      }
+    ]
+  },
+  "nodes": [
+    {
+      "id": "camera",
+      "lane": "processing",
+      "col": 0,
+      "type": "external",
+      "label": "摄像头画面",
+      "sublabel": "输入：逐帧比赛图像"
+    },
+    {
+      "id": "hsv",
+      "lane": "processing",
+      "col": 1,
+      "type": "backend",
+      "width": 112,
+      "label": "转换为 HSV",
+      "sublabel": "问题：区分红蓝颜色"
+    },
+    {
+      "id": "inrange",
+      "lane": "processing",
+      "col": 2,
+      "type": "backend",
+      "width": 132,
+      "label": "inRange 颜色筛选",
+      "sublabel": "验证：目标颜色变白，背景变黑"
+    },
+    {
+      "id": "contours",
+      "lane": "processing",
+      "col": 3,
+      "type": "backend",
+      "width": 166,
+      "label": "findContours 提取轮廓",
+      "sublabel": "验证：能画出白色区域边界"
+    },
+    {
+      "id": "filter",
+      "lane": "processing",
+      "col": 4,
+      "type": "security",
+      "width": 148,
+      "label": "筛选候选装甲板",
+      "sublabel": "面积、矩形、长宽比；标识待验证"
+    },
+    {
+      "id": "target_box",
+      "lane": "processing",
+      "col": 5,
+      "type": "frontend",
+      "width": 126,
+      "label": "生成候选矩形框",
+      "sublabel": "计算框内像素中心点"
+    },
+    {
+      "id": "output",
+      "lane": "output_lane",
+      "col": 5,
+      "type": "messagebus",
+      "width": 132,
+      "label": "输出目标与中心点",
+      "sublabel": "不包含云台角度与射击控制"
+    },
+    {
+      "id": "compare",
+      "lane": "comparison_lane",
+      "col": 5,
+      "type": "database",
+      "width": 116,
+      "label": "与人工标注比较",
+      "sublabel": "检查目标与中心点是否接近"
+    },
+    {
+      "id": "decision",
+      "lane": "decision_lane",
+      "col": 5,
+      "type": "security",
+      "width": 128,
+      "label": "验证是否符合",
+      "sublabel": "识别目标正确且中心点足够接近"
+    },
+    {
+      "id": "complete",
+      "lane": "completion_lane",
+      "col": 5,
+      "type": "external",
+      "width": 112,
+      "label": "阶段验证完成",
+      "sublabel": "保留结果和证据"
+    },
+    {
+      "id": "adjust",
+      "lane": "adjustment",
+      "col": 4,
+      "type": "security",
+      "width": 116,
+      "label": "调整检测参数",
+      "sublabel": "根据失败类型选择调整位置"
+    }
+  ],
+  "edges": [
+    {
+      "from": "camera",
+      "to": "hsv",
+      "role": "main"
+    },
+    {
+      "from": "hsv",
+      "to": "inrange",
+      "role": "main"
+    },
+    {
+      "from": "inrange",
+      "to": "contours",
+      "label": "黑白二值图",
+      "role": "main"
+    },
+    {
+      "from": "contours",
+      "to": "filter",
+      "label": "轮廓坐标",
+      "role": "main"
+    },
+    {
+      "from": "filter",
+      "to": "target_box",
+      "label": "符合条件",
+      "variant": "emphasis",
+      "role": "main"
+    },
+    {
+      "from": "target_box",
+      "to": "output",
+      "role": "main"
+    },
+    {
+      "from": "output",
+      "to": "compare",
+      "label": "验证",
+      "role": "main"
+    },
+    {
+      "from": "compare",
+      "to": "decision",
+      "role": "main"
+    },
+    {
+      "from": "decision",
+      "to": "complete",
+      "label": "符合",
+      "variant": "emphasis",
+      "role": "main"
+    },
+    {
+      "from": "decision",
+      "to": "adjust",
+      "label": "不符合",
+      "variant": "security",
+      "role": "error"
+    },
+    {
+      "from": "adjust",
+      "to": "inrange",
+      "label": "颜色不准：调整 HSV 范围",
+      "variant": "security",
+      "role": "return"
+    },
+    {
+      "from": "adjust",
+      "to": "filter",
+      "label": "候选不准：调整筛选条件",
+      "variant": "security",
+      "role": "return"
+    }
+  ]
+}
