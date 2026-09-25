@@ -320,6 +320,7 @@ Ubuntu 22.04.5 Jammy 已成功安装，可以进入桌面、打开终端并联�
 
 - 本机已有的 Git 2.55.0：用于初始化项目仓库、检查改动、建立提交历史、创建功能分支并合并回主分支。
 - Git 命令和分支操作步骤：由 AI 根据当天任务分步提供，我亲自执行 `status`、`diff`、`add`、`commit`、`log`、`branch`、`switch` 和 `merge`，并根据终端输出确认结果。
+- GitHub 公开仓库：用于保存本地提交并验证考核人员可以访问；仓库地址为 <https://github.com/1979519619/North-Pole-Bears-Algorithm-Assessment>。
 
 ## 学习与实施过程
 
@@ -341,6 +342,12 @@ Ubuntu 22.04.5 Jammy 已成功安装，可以进入桌面、打开终端并联�
 
 我原来不明白提交去了哪里，后来知道 `git commit` 先把暂存内容保存到当前项目的本地 `.git` 仓库，`git push` 才会把本地提交上传到远程仓库。我现在把工作区理解为正在编辑的文件，暂存区是下一次提交准备包含的内容，本地仓库保存已经完成的提交历史，远程仓库则用于把这些历史上传后共享。`git add` 选择内容，`git commit` 建立本地检查点，`git push` 上传本地提交。
 
+整理 README 和证据时，我在 `tools-vscode` 子目录中直接执行了以项目根目录为起点的路径，导致 `git add README.md assets/2-4` 报错。回到项目根目录后，相同的暂存操作成功。我也发现，`git diff --cached --check` 没有输出不一定表示文件已经暂存，还需要结合 `git status --short` 或 `git diff --cached --stat` 确认暂存区确实包含目标文件。
+
+我在 GitHub 创建公开仓库后，将它添加为名为 `origin` 的远程仓库，并把 `main` 和 `feature/input-validation` 两个分支推送上去。终端中的分支跟踪信息、远程地址和提交图，以及浏览器中的公开仓库页面共同证明推送成功；核验时 GitHub 页面显示 2 个分支和 5 个提交，README、源码、忽略规则和证据目录均可访问。
+
+`origin` 和首次推送使用的 `-u` 对我来说仍是新概念。AI 解释 `origin` 是远程仓库地址的常用别名，`-u` 用于记录本地分支与远程分支的跟踪关系。当前跟踪关系已经由命令结果验证，但我还需要通过重复练习掌握完整流程。以后我想把初始化、功能分支、合并、推送和常见错误整理成项目外的独立“学习 SOP”，不把它混入本次考核仓库。
+
 ## 结果
 
 本地 Git 练习已经完成以下结果：
@@ -350,6 +357,9 @@ Ubuntu 22.04.5 Jammy 已成功安装，可以进入桌面、打开终端并联�
 - 功能分支已通过合并提交 `e7f3ab4` 合并回 `main`，分支历史得到保留。
 - 合并后的主线通过清洁构建和错误输入重试测试。
 - `build/`、`.vscode/` 和 `.exe` 等可重新生成内容没有进入 Git 跟踪范围。
+- 公开 GitHub 仓库已建立，`origin` 的拉取和推送地址均指向该仓库。
+- `main` 正在跟踪 `origin/main`，`feature/input-validation` 正在跟踪 `origin/feature/input-validation`，两个远程分支均已核验。
+- GitHub 页面可公开访问；本次核验截图中能够看到 2 个分支、5 个提交和项目 README。
 
 证据保存在 `assets/2-4/`：
 
@@ -361,8 +371,10 @@ Ubuntu 22.04.5 Jammy 已成功安装，可以进入桌面、打开终端并联�
 - `06-功能分支提交与分支隔离验证.png`
 - `07-功能分支合并与提交图验证.png`
 - `08-合并后主线清洁构建与输入验证.png`
-
-GitHub 远程仓库尚未创建，`git remote -v` 当前没有输出，因此还没有执行 `push`，也没有远程链接或考核人员访问验证。这部分不能算完成，将在下一次任务中继续。
+- `09-暂存命令目录错误与未暂存状态.png`
+- `10-README与Git证据暂存检查通过.png`
+- `11-Git远程分支与推送状态验证.png`
+- `12-GitHub公开仓库与提交记录.png`
 
 # 2.5 AI Agent
 
@@ -376,15 +388,37 @@ GitHub 远程仓库尚未创建，`git remote -v` 当前没有输出，因此还
 
 ## 资料与用途
 
-<!-- 记录 Agent 版本、仓库、实际查看的文件路径及用途。 -->
+- Codex：用于只读检索北极熊哨兵仓库、定位启动文件与代码路径、整理候选结论。我使用的是 ChatGPT 桌面应用，版本截图显示为 `26.917.9434.0`；没有单独取得 Codex CLI 版本截图。
+- 北极熊哨兵公开仓库：本次分析固定在 `main` 分支提交 `c918a1ce8df1ce575f15ab3031098e40c206937d`。仓库没有克隆到本地，也没有构建或运行。
+- `src/pb2025_sentry_bringup/launch/bringup.launch.py`：用于确认总启动文件组织的模块以及三个参数的作用。
+- `src/pb2025_sentry_bringup/params/node_params.yaml` 和 `src/sp_vision_25/configs/sentry.yaml`：用于区分原视觉与 SP 视觉的配置入口。
+- `src/sp_vision_25/src/sentry_ros2.cpp`、`src/sp_vision_25/io/camera.cpp`、`src/sp_vision_25/io/ros2cboard.cpp`：用于检查 SP 视觉的图像输入、关节状态输入、检测跟踪过程和 ROS2 输出话题。
+- Archify：用于把人工确认后的节点和连线整理成启动流程图与数据流图。最终保留 PNG、HTML、可编辑 JSON 和检查记录。
 
 ## 学习与实施过程
 
-<!-- 按日期记录关键对话、检索过程、AI 结论、人工核查和修正。 -->
+### 2026 年 9 月 25 日
+
+我要求 Codex 只读分析仓库，并且每个结论都给出代码路径。分析过程没有修改仓库、执行构建或声称程序已经正常运行。我一开始不知道原视觉系统和 SP 视觉系统分别负责什么。经过代码路径说明后，我把它们的主要区别理解为：原视觉把相机、识别、跟踪和弹道计算分给多个 ROS2 节点；SP 视觉把检测、跟踪、瞄准、射击和寻敌等主要功能集中在 `sentry_ros2` 中。这个理解经过我确认。
+
+总启动文件会组织串口与云台、视觉、导航、行为决策、RViz 和录包等模块。`use_sp_vision=False` 时选择原视觉，设为 `True` 时选择 SP 视觉，两套视觉不会同时启动；`use_rviz=True` 时由总启动文件统一启动 RViz。`params_file` 默认指向 `node_params.yaml`，会传给原视觉、串口、导航、行为决策和录包，但不会自动传给 SP 视觉。SP 视觉使用独立的 `sp_vision_config`，默认指向 `sp_vision_25/configs/sentry.yaml`。我确认了“修改 `node_params.yaml` 不代表参数能够正确传给 SP 视觉”这一点。
+
+我选择 `sp_vision_25` 继续分析，因为它对应我感兴趣的“装甲板识别 → 中心或目标定位 → 云台瞄准和射击”。代码显示它直接读取工业相机，根据配置选择 YOLO 或传统方法检测装甲板，再跟踪目标并计算瞄准、射击和寻敌状态；云台 yaw、pitch 经过姿态计算后参与处理。主要输出包括 `/cmd_gimbal`、`/cmd_shoot` 和 `/tracker/target`，分别流向云台管理、串口和行为决策模块。
+
+人工审查时，我保留了代码与注释不一致的地方：注释称从 ROS2 话题读取图像，但实际代码直接访问相机；代码把 `/serial/gimbal_joint_state` 称为 IMU 数据，但实际输入是云台关节角，再由 yaw、pitch 计算四元数。内部单位矩阵和标定 TODO 的实际影响、依赖声明是否会造成运行失败、默认行为树是否真正使用目标跟踪数据，都没有通过运行验证，因此没有写成确定结论。
+
+我确认两张图符合我的理解。使用 Archify 时，自动导出 PNG 的浏览器检查没有成功，反复处理使任务耗时过长；两张图的结构检查均为 9/9、0 个错误和 0 个警告，随后由我打开 PNG 做人工视觉确认。以后如果只需要 PNG，我会优先生成 HTML 后自行打开截图，不再为自动导出反复调试。
 
 ## 结果
 
-<!-- 直接给出启动链、参数解释、功能包分析、两张图、代码路径和人工审查结论。 -->
+本次完成的是有代码路径支持的静态分析，不是运行验收。总启动文件、三个参数、原视觉与 SP 视觉的配置边界，以及 SP 视觉的主要输入、处理链和输出话题已经整理并人工确认。
+
+- 启动流程图：`git-agent/diagrams/01-哨兵启动流程图.png`
+- 数据流图：`git-agent/diagrams/02-SP视觉数据流图.png`
+- 版本证据：`assets/2-5/01-ChatGPT桌面应用版本信息.png`
+- 关键对话与人工审查：`assets/2-5/02-Codex仓库只读分析与人工审查对话.png`
+
+仓库没有实际运行，因此标定矩阵影响、默认行为树是否使用目标信息和整体运行效果仍未验证。
 
 # 2.6 ROS2
 
@@ -398,12 +432,46 @@ GitHub 远程仓库尚未创建，`git remote -v` 当前没有输出，因此还
 
 ## 资料与用途
 
-<!-- 记录实际使用的 ROS2 安装、教程和 API 资料及用途。 -->
+- [ROS2 Humble Ubuntu deb 安装说明](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html)：AI 根据官方说明分步给出安装命令，我在 Ubuntu 22.04 虚拟机中亲自执行并检查结果。
+- [ROS2 Humble C++ Publisher/Subscriber 教程](https://docs.ros.org/en/humble/Tutorials/Beginner-Client-Libraries/Writing-A-Simple-Cpp-Publisher-And-Subscriber.html)：用于建立工作空间、创建 `cpp_pubsub`、编译并验证发布订阅通信。
+- `ros2/src/temperature_converter/`：保存我实际创建并运行验证的温度转换功能包源码、构建文件和 launch 文件。
+- `ros2 topic list`、`ros2 topic info`、`ros2 topic echo`：用于确认话题存在、消息类型、发布者和订阅者数量，以及实际传输的数据。
 
 ## 学习与实施过程
 
-<!-- 按日期记录安装、工作空间、教程、代码、构建、运行、报错和修复过程。 -->
+### 2026 年 9 月 25 日
+
+安装前先检查了磁盘位置和空间。虚拟机磁盘实际位于 F 盘，Ubuntu 根分区有约 44 GiB 可用空间。随后我在 Ubuntu 22.04.5 LTS 中配置 ROS2 软件源，安装 ROS2 Humble Desktop 和开发工具，并把 `/opt/ros/humble/setup.bash` 加入终端环境。新终端不再需要手动执行 `source` 就能够使用 `ros2`。
+
+我先运行系统自带的 C++ talker 和 Python listener，观察到 `Publishing` 与 `I heard` 的编号对应。我把这一现象理解为 ROS2 帮助两个独立程序建立了通信。之后我建立 `~/ros2_ws`，按照官方教程创建 `cpp_pubsub`，自己保存发布者和订阅者源码，补充 CMake 构建规则并执行 `colcon build`。自编译的两个节点通过 `/topic` 通信，`topic info` 显示一个发布者和一个订阅者，`topic echo` 能直接看到 `Hello, world!` 数据。
+
+在官方示例中，我最初把 `"Hello, world!"` 当成话题名，也把 `500ms` 猜成发布者与订阅者之间的最大延迟。后来通过代码位置区分出：话题名是 `topic`，`Hello, world!` 是消息内容，`500ms` 表示每半秒发布一次，`count_++` 用来增加消息编号。
+
+随后我创建 `temperature_converter`。我选择让 `celsius_publisher` 先把输入的摄氏温度换算成华氏温度，再通过 `/fahrenheit` 发布，理由是减少订阅者的工作；`fahrenheit_subscriber` 只接收并显示 `std_msgs/msg/Float64`。错误输入继续采用以前 C++ 程序的处理方式：`std::cin.clear()` 清除错误状态，`std::cin.ignore(...)` 丢弃错误内容，外层循环继续等待下一次输入。
+
+第一次构建 `temperature_converter` 时，`package.xml` 报 `junk after document element`。我发现自己把两行 `exec_depend` 放到了文件最顶部，移入 `<package>...</package>` 后仍然报错；根据 `XML or text declaration not at start of entity: line 2` 又定位到 XML 声明前多了一行空白。我当时没有意识到一行空白也会让 XML 解析失败。删除空白后，XML 检查显示 `package.xml OK`，重新构建显示一个功能包完成。
+
+launch 文件同时启动两个节点，并为需要键盘输入的发布者打开单独终端。我输入 `abc` 后程序显示 `Invalid input.` 并继续运行，再输入 0、100 和 -40；发布端、订阅端与 `topic echo` 的结果一致。最后通过 VMware 共享文件夹，只把 `temperature_converter` 源码复制到项目的 `ros2/src/`，没有复制 `build/`、`install/` 或 `log/`。
+
+我现在认可 `wget` 用于根据网址下载文件，`source setup.bash` 会在当前终端加载路径等环境信息，`<(...)` 会把括号内命令的输出临时作为可读取的输入。但这些概念以及启动节点、查看 Topic、运行 launch 的步骤，我目前还不能脱离提示完成，仍需多加练习。
 
 ## 结果
 
-<!-- 直接给出 Humble 环境、节点、Topic、转换公式、三组结果和 launch 证据。 -->
+ROS2 Humble 已在 Ubuntu 22.04.5 LTS 虚拟机中安装并验证，`ros2` 路径为 `/opt/ros/humble/bin/ros2`。官方发布订阅教程、自建 C++ 功能包、`colcon build`、环境加载、launch 和 Topic 检查均已实际完成。
+
+`temperature_converter` 的数据流为：用户输入摄氏温度 → `celsius_publisher` 按 `℉ = ℃ × 9 / 5 + 32` 换算 → `/fahrenheit` → `fahrenheit_subscriber`。`/fahrenheit` 的类型是 `std_msgs/msg/Float64`，运行时发布者和订阅者数量均为 1。
+
+三组验证结果：
+
+- 0℃ → 32℉
+- 100℃ → 212℉
+- -40℃ → -40℉
+
+证据保存在 `assets/2-6/`：
+
+- `01-Ubuntu版本空间与ROS2安装前检查.png`
+- `02-ROS2官方Talker与Listener通信验证.png`
+- `03-C++发布者与订阅者源码保存检查.png`
+- `04-官方C++发布订阅与Topic命令验证.png`
+- `05-temperature-converter构建Launch与三组Topic验证.png`
+- `06-ROS2-Humble环境与安装状态验证.png`

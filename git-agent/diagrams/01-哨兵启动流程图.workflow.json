@@ -1,0 +1,64 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "哨兵启动流程图",
+    "locale": "zh-CN",
+    "animation": "none",
+    "quality_profile": "showcase"
+  },
+  "lanes": [
+    { "id": "orchestration", "label": "总启动控制" },
+    { "id": "configuration", "label": "配置入口" },
+    { "id": "system_modules", "label": "其他系统模块" },
+    { "id": "visualization", "label": "可视化" }
+  ],
+  "mainPath": ["bringup", "vision_gate"],
+  "semanticChecks": {
+    "allowedRoots": ["bringup", "params_file", "sp_config", "rviz_gate"],
+    "allowedTerminals": ["vision_gate", "common_modules", "rviz"],
+    "requiredPaths": [
+      { "from": "bringup", "to": "vision_gate" },
+      { "from": "params_file", "to": "vision_gate" },
+      { "from": "params_file", "to": "common_modules" },
+      { "from": "sp_config", "to": "vision_gate" }
+    ]
+  },
+  "nodes": [
+    { "id": "bringup", "lane": "orchestration", "col": 0, "width": 140, "type": "backend", "label": "bringup.launch.py", "sublabel": "统一组织启动模块" },
+    { "id": "vision_gate", "lane": "orchestration", "col": 2, "width": 240, "type": "messagebus", "label": "use_sp_vision：视觉系统二选一", "sublabel": "False（默认）=原视觉｜True=SP 视觉" },
+    { "id": "params_file", "lane": "configuration", "col": 0, "type": "database", "label": "params_file", "sublabel": "node_params.yaml" },
+    { "id": "sp_config", "lane": "configuration", "col": 1, "width": 140, "type": "database", "label": "sp_vision_config", "sublabel": "默认 sentry.yaml" },
+    { "id": "common_modules", "lane": "system_modules", "col": 3, "width": 220, "type": "cloud", "label": "其他启动模块", "sublabel": "串口与云台｜导航｜行为决策｜录包" },
+    { "id": "rviz_gate", "lane": "visualization", "col": 1, "type": "messagebus", "label": "use_rviz", "sublabel": "默认 False" },
+    { "id": "rviz", "lane": "visualization", "col": 2, "type": "frontend", "label": "RViz", "sublabel": "由总启动文件统一启动" }
+  ],
+  "edges": [
+    { "id": "select_vision", "from": "bringup", "to": "vision_gate", "label": "选择并启动一套视觉系统", "variant": "emphasis", "role": "main" },
+    { "id": "start_common", "from": "bringup", "to": "common_modules", "label": "并行加入启动", "role": "branch" },
+    { "id": "start_rviz", "from": "rviz_gate", "to": "rviz", "label": "True 时启动", "role": "branch" },
+    { "id": "params_vision", "from": "params_file", "to": "vision_gate", "label": "仅原视觉读取", "variant": "dashed", "role": "async", "fromSide": "top", "toSide": "bottom" },
+    { "id": "params_common", "from": "params_file", "to": "common_modules", "label": "传入串口、导航、决策与录包", "variant": "dashed", "role": "async" },
+    { "id": "config_sp", "from": "sp_config", "to": "vision_gate", "label": "仅 SP 视觉读取", "variant": "security", "role": "async" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "视觉分支",
+      "items": [
+        "use_sp_vision=False 使用原视觉系统",
+        "use_sp_vision=True 使用 SP 视觉系统",
+        "两套视觉系统不会同时启动"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "参数边界",
+      "items": [
+        "params_file 不会传入 SP 视觉",
+        "SP 视觉使用独立的 sp_vision_config",
+        "use_rviz 由总启动文件统一控制"
+      ]
+    }
+  ]
+}

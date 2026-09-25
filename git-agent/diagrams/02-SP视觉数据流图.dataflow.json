@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "SP 视觉数据流图",
+    "locale": "zh-CN",
+    "animation": "none",
+    "quality_profile": "showcase",
+    "viewBox": [1080, 820]
+  },
+  "stages": [
+    { "label": "输入" },
+    { "label": "感知" },
+    { "label": "决策" },
+    { "label": "ROS2 通信" },
+    { "label": "接收模块" }
+  ],
+  "nodes": [
+    { "id": "camera", "type": "external", "label": "工业相机", "sublabel": "直接读取硬件", "stage": 0, "row": 0 },
+    { "id": "config", "type": "database", "label": "sentry.yaml", "sublabel": "颜色、模型、相机与标定", "stage": 0, "row": 2 },
+    { "id": "joint_state", "type": "messagebus", "label": "云台关节状态", "sublabel": "yaw、pitch 输入", "stage": 0, "row": 4 },
+    { "id": "detector", "type": "backend", "label": "装甲板检测", "sublabel": "YOLO 或传统方法", "stage": 1, "row": 0 },
+    { "id": "tracker", "type": "backend", "label": "目标跟踪", "sublabel": "Tracker", "stage": 2, "row": 0 },
+    { "id": "pose", "type": "backend", "label": "姿态计算", "sublabel": "由 yaw、pitch 计算四元数", "stage": 1, "row": 4 },
+    { "id": "decision", "type": "security", "label": "瞄准、射击与寻敌", "sublabel": "Aimer、Shooter、SearchMode", "stage": 2, "row": 2, "width": 140 },
+    { "id": "ros2_outputs", "type": "messagebus", "label": "ROS2 输出话题", "sublabel": "/cmd_gimbal｜/cmd_shoot｜/tracker/target", "stage": 3, "row": 2, "width": 190 },
+    { "id": "gimbal_manager", "type": "backend", "label": "gimbal_manager", "sublabel": "转换云台控制命令", "stage": 4, "row": 0 },
+    { "id": "serial_node", "type": "external", "label": "串口节点", "sublabel": "向机器人控制板发送命令", "stage": 4, "row": 2 },
+    { "id": "behavior_server", "type": "backend", "label": "行为决策服务器", "sublabel": "写入行为树黑板", "stage": 4, "row": 4 }
+  ],
+  "flows": [
+    { "id": "camera_image", "from": "camera", "to": "detector", "label": "相机图像", "variant": "emphasis", "route": "straight" },
+    { "id": "config_detector", "from": "config", "to": "detector", "label": "识别与相机参数", "variant": "dashed" },
+    { "id": "detected_armors", "from": "detector", "to": "tracker", "label": "装甲板检测结果", "variant": "emphasis", "route": "straight" },
+    { "id": "tracked_target", "from": "tracker", "to": "decision", "label": "目标状态", "variant": "emphasis", "route": "straight", "fromSide": "bottom", "toSide": "top", "labelAt": [530, 200] },
+    { "id": "joint_angles", "from": "joint_state", "to": "pose", "label": "/serial/gimbal_joint_state", "variant": "default", "route": "straight", "labelAt": [208, 656] },
+    { "id": "pose_input", "from": "pose", "to": "decision", "label": "姿态四元数", "variant": "default" },
+    { "id": "control_output", "from": "decision", "to": "ros2_outputs", "label": "云台角度与射击决定", "variant": "emphasis", "route": "straight", "labelAt": [618, 428] },
+    { "id": "target_output", "from": "tracker", "to": "ros2_outputs", "label": "Target 消息", "variant": "emphasis" },
+    { "id": "gimbal_command", "from": "ros2_outputs", "to": "gimbal_manager", "label": "/cmd_gimbal", "variant": "default" },
+    { "id": "joint_command", "from": "gimbal_manager", "to": "serial_node", "label": "/cmd_gimbal_joint", "variant": "default", "route": "straight", "fromSide": "bottom", "toSide": "top", "labelAt": [960, 200] },
+    { "id": "shoot_command", "from": "ros2_outputs", "to": "serial_node", "label": "/cmd_shoot 与 tracking 状态", "variant": "security", "labelAt": [770, 428] },
+    { "id": "behavior_target", "from": "ros2_outputs", "to": "behavior_server", "label": "/tracker/target", "variant": "default" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "主要处理链",
+      "items": [
+        "相机图像经过检测和跟踪后进入瞄准与射击计算",
+        "云台关节角用于计算姿态，不等同于直接读取原始 IMU",
+        "控制命令与目标信息通过不同 ROS2 话题输出"
+      ]
+    },
+    {
+      "dot": "orange",
+      "title": "代码审查边界",
+      "items": [
+        "图像由程序直接读取工业相机，而非订阅 ROS2 图像话题",
+        "实际运行效果和标定矩阵影响尚未验证",
+        "默认行为树是否使用目标信息仍标记为不确定"
+      ]
+    }
+  ]
+}
